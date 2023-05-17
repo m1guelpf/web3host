@@ -56,11 +56,14 @@ const TeamSwitcher: FC<{
 	className?: string
 	teams: Team[]
 	currentTeamId: string
-	switchTeam: (team: Team) => Promise<void>
-}> = ({ className, teams, currentTeamId, switchTeam }) => {
+	onSwitch: (team: Team) => Promise<void>
+	onCreate: (name: string) => Promise<void>
+}> = ({ className, teams, currentTeamId, onSwitch, onCreate }) => {
 	const { address } = useAccount()
 	const { data: userAvatar } = useEnsAvatar({ address })
+
 	const [open, setOpen] = useState(false)
+	const [name, setName] = useState<string>('')
 	const [showNewTeamDialog, setShowNewTeamDialog] = useState(false)
 
 	const selectedTeam = useMemo(() => {
@@ -80,6 +83,13 @@ const TeamSwitcher: FC<{
 		],
 		[teams]
 	)
+
+	const createTeam = async () => {
+		await onCreate(name)
+
+		setName('')
+		setShowNewTeamDialog(false)
+	}
 
 	return (
 		<Dialog open={showNewTeamDialog} onOpenChange={setShowNewTeamDialog}>
@@ -115,7 +125,7 @@ const TeamSwitcher: FC<{
 								<CommandGroup heading="Personal Account">
 									<CommandItem
 										onSelect={() => {
-											switchTeam(personalTeam)
+											onSwitch(personalTeam)
 											setOpen(false)
 										}}
 										className="text-sm"
@@ -148,7 +158,7 @@ const TeamSwitcher: FC<{
 										<CommandItem
 											key={team.id}
 											onSelect={() => {
-												switchTeam(team)
+												onSwitch(team)
 												setOpen(false)
 											}}
 											className="text-sm"
@@ -198,20 +208,31 @@ const TeamSwitcher: FC<{
 					<DialogTitle>Create team</DialogTitle>
 					<DialogDescription>Add a new team to manage products and customers.</DialogDescription>
 				</DialogHeader>
-				<div>
+				<form action={createTeam}>
 					<div className="space-y-4 py-2 pb-4">
 						<div className="space-y-2">
 							<Label htmlFor="name">Team name</Label>
-							<Input id="name" placeholder="Acme Inc." />
+							<Input
+								id="name"
+								placeholder="Acme Inc."
+								value={name}
+								onChange={e => setName(e.target.value)}
+								onKeyDown={e => {
+									if (e.key !== 'Enter') return
+
+									e.preventDefault()
+									createTeam()
+								}}
+							/>
 						</div>
 					</div>
-				</div>
-				<DialogFooter>
-					<Button variant="outline" onClick={() => setShowNewTeamDialog(false)}>
-						Cancel
-					</Button>
-					<Button type="submit">Continue</Button>
-				</DialogFooter>
+					<DialogFooter>
+						<Button variant="outline" onClick={() => setShowNewTeamDialog(false)}>
+							Cancel
+						</Button>
+						<Button type="submit">Continue</Button>
+					</DialogFooter>
+				</form>
 			</DialogContent>
 		</Dialog>
 	)

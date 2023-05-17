@@ -9,7 +9,6 @@ import { PropsWithChildren } from 'react'
 import TeamSwitcher from '@/components/TeamSwitcher'
 import { Bell, X, List, AirTrafficControl } from '@/components/ui/icons'
 import ConnectWallet, { MobileProfileNav } from '@/components/ConnectWallet'
-import { RequestCookies, ResponseCookies } from 'next/dist/compiled/@edge-runtime/cookies'
 import Collapsible, { CollapsibleContent, CollapsibleTrigger } from '@/components/ui/Collapsible'
 
 const navigation = [
@@ -32,6 +31,17 @@ const DashboardLayout = async ({ children }: PropsWithChildren<{}>) => {
 		await session.persist(cookies())
 	}
 
+	const createTeam = async (name: string) => {
+		'use server'
+
+		const session = await Session.fromCookies(cookies())
+		const team = await prisma.team.create({ data: { name, members: { connect: { id: session.userId } } } })
+		session.teamId = team.id
+
+		// @ts-expect-error -- Next.js returns the wrong type for cookies on server actions
+		await session.persist(cookies())
+	}
+
 	return (
 		<div className="min-h-screen bg-neutral-100">
 			<div className="bg-neutral-800 pb-32">
@@ -47,7 +57,8 @@ const DashboardLayout = async ({ children }: PropsWithChildren<{}>) => {
 										<TeamSwitcher
 											className="ml-4"
 											teams={user!.teams}
-											switchTeam={switchTeam}
+											onSwitch={switchTeam}
+											onCreate={createTeam}
 											currentTeamId={session.teamId!}
 										/>
 									</div>

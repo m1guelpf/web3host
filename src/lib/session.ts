@@ -53,7 +53,6 @@ class Session {
 	}
 
 	async persist(res: NextResponse | ResponseCookies): Promise<void> {
-		console.log(res)
 		let cookies: ResponseCookies
 		if (isCookies(res)) cookies = res
 		else cookies = res.cookies
