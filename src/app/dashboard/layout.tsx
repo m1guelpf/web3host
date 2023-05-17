@@ -19,7 +19,12 @@ const navigation = [
 
 const DashboardLayout = async ({ children }: PropsWithChildren<{}>) => {
 	const session = await Session.fromCookies(cookies())
-	const user = await prisma.user.findUnique({ where: { id: session.userId }, select: { teams: true } })
+	const user = await prisma.user.findUnique({
+		where: { id: session.userId },
+		select: { teams: { select: { team: true } } },
+	})
+
+	if (!user) throw new Error('User not found')
 
 	const switchTeam = async (team: Team) => {
 		'use server'
@@ -35,7 +40,12 @@ const DashboardLayout = async ({ children }: PropsWithChildren<{}>) => {
 		'use server'
 
 		const session = await Session.fromCookies(cookies())
-		const team = await prisma.team.create({ data: { name, members: { connect: { id: session.userId } } } })
+		const team = await prisma.team.create({
+			data: {
+				name,
+				members: { create: { user: { connect: { id: session.userId } }, role: 'OWNER' } },
+			},
+		})
 		session.teamId = team.id
 
 		// @ts-expect-error -- Next.js returns the wrong type for cookies on server actions
@@ -56,10 +66,10 @@ const DashboardLayout = async ({ children }: PropsWithChildren<{}>) => {
 										</Link>
 										<TeamSwitcher
 											className="ml-4"
-											teams={user!.teams}
 											onSwitch={switchTeam}
 											onCreate={createTeam}
 											currentTeamId={session.teamId!}
+											teams={user.teams.map(membership => membership.team)}
 										/>
 									</div>
 									<div className="hidden md:block">

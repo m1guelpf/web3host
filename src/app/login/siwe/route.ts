@@ -1,7 +1,7 @@
 import prisma from '@/db/prisma'
 import { tap } from '@/lib/utils'
 import Session from '@/lib/session'
-import { TeamType } from '@prisma/client'
+import { TeamRole, TeamType } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 import { SiweErrorType, SiweMessage, generateNonce } from 'siwe'
 
@@ -48,13 +48,13 @@ export const POST = async (req: NextRequest) => {
 		create: {
 			id: session.userId,
 			teams: {
-				create: { name: 'Personal Team', type: TeamType.PERSONAL },
+				create: { team: { create: { name: 'Personal Team', type: TeamType.PERSONAL } }, role: TeamRole.OWNER },
 			},
 		},
 		update: {},
-		select: { teams: { select: { id: true } } },
+		select: { teams: { select: { teamId: true } } },
 	})
-	session.teamId = user.teams[0].id
+	session.teamId = user.teams[0].teamId
 
 	return tap(new NextResponse(''), res => session.persist(res))
 }

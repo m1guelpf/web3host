@@ -40,7 +40,7 @@ class Session {
 		return new Session(await unsealData<ISession>(sessionCookie, SESSION_OPTIONS))
 	}
 
-	clear(res: NextResponse): Promise<void> {
+	clear(res: NextResponse | ResponseCookies): Promise<void> {
 		this.nonce = undefined
 		this.teamId = undefined
 		this.userId = undefined

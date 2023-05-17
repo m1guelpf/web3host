@@ -13,7 +13,7 @@ model User {
     invitedAt    DateTime?
     registeredAt DateTime  @default(now())
 
-    teams Team[]
+    teams TeamMember[]
 }
 
 enum TeamType {
@@ -28,7 +28,24 @@ model Team {
     avatarUrl String?
 
     sites   Site[]
-    members User[]
+    members TeamMember[]
+}
+
+enum TeamRole {
+    OWNER
+    ADMIN
+    MEMBER
+}
+
+model TeamMember {
+    userId String
+    teamId String
+    role   TeamRole @default(MEMBER)
+
+    user User @relation(fields: [userId], references: [id])
+    team Team @relation(fields: [teamId], references: [id])
+
+    @@id([userId, teamId])
 }
 
 model Site {
