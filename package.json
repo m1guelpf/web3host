@@ -10,6 +10,7 @@
 	},
 	"dependencies": {
 		"@phosphor-icons/react": "^2.0.9",
+		"@prisma/client": "4.14.0",
 		"@radix-ui/react-avatar": "^1.0.2",
 		"@radix-ui/react-collapsible": "^1.0.2",
 		"@radix-ui/react-dialog": "^1.0.3",
@@ -31,7 +32,7 @@
 		"ethers": "^5",
 		"framer-motion": "^10.12.11",
 		"iron-session": "^6.3.1",
-		"next": "13.4.2",
+		"next": "13.4.3-canary.1",
 		"postcss": "8.4.23",
 		"react": "18.2.0",
 		"react-dom": "18.2.0",
@@ -45,6 +46,10 @@
 	},
 	"devDependencies": {
 		"prettier": "^2.8.8",
-		"prettier-plugin-sort-imports-desc": "^1.0.0"
+		"prettier-plugin-sort-imports-desc": "^1.0.0",
+		"prisma": "^4.14.0"
+	},
+	"prisma": {
+		"schema": "src/db/schema.prisma"
 	}
 }

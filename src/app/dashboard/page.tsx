@@ -1,4 +1,11 @@
-const DashboardPage = () => {
+import prisma from '@/db/prisma'
+import Session from '@/lib/session'
+import { cookies } from 'next/headers'
+
+const DashboardPage = async () => {
+	const session = await Session.fromCookies(cookies())
+	const sites = await prisma.site.findMany({ where: { teamId: session.teamId } })
+
 	return (
 		<div className="relative h-96 overflow-hidden rounded border border-dashed border-neutral-400 opacity-75">
 			<svg className="absolute inset-0 h-full w-full stroke-neutral-900/10" fill="none">

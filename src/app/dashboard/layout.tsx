@@ -1,20 +1,37 @@
-import clsx from 'clsx'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import prisma from '@/db/prisma'
+import Session from '@/lib/session'
 import Navigation from './Navigation'
+import { Team } from '@prisma/client'
+import { cookies } from 'next/headers'
 import { PropsWithChildren } from 'react'
 import TeamSwitcher from '@/components/TeamSwitcher'
 import { Bell, X, List, AirTrafficControl } from '@/components/ui/icons'
 import ConnectWallet, { MobileProfileNav } from '@/components/ConnectWallet'
+import { RequestCookies, ResponseCookies } from 'next/dist/compiled/@edge-runtime/cookies'
 import Collapsible, { CollapsibleContent, CollapsibleTrigger } from '@/components/ui/Collapsible'
 
 const navigation = [
 	{ name: 'Overview', href: '/dashboard', current: true },
-	{ name: 'Activity', href: '/team/', current: false },
-	{ name: 'Settings', href: '#', current: false },
+	{ name: 'Activity', href: '/team', current: false },
+	{ name: 'Settings', href: '/settings', current: false },
 ]
 
-const DashboardLayout = ({ children }: PropsWithChildren<{}>) => {
+const DashboardLayout = async ({ children }: PropsWithChildren<{}>) => {
+	const session = await Session.fromCookies(cookies())
+	const user = await prisma.user.findUnique({ where: { id: session.userId }, select: { teams: true } })
+
+	const switchTeam = async (team: Team) => {
+		'use server'
+
+		const session = await Session.fromCookies(cookies())
+		session.teamId = team.id
+
+		// @ts-expect-error -- Next.js returns the wrong type for cookies on server actions
+		await session.persist(cookies())
+	}
+
 	return (
 		<div className="min-h-screen bg-neutral-100">
 			<div className="bg-neutral-800 pb-32">
@@ -27,7 +44,12 @@ const DashboardLayout = ({ children }: PropsWithChildren<{}>) => {
 										<Link href="/dashboard" className="flex-shrink-0">
 											<AirTrafficControl className="h-8 w-8" color="white" weight="duotone" />
 										</Link>
-										<TeamSwitcher className="ml-4" />
+										<TeamSwitcher
+											className="ml-4"
+											teams={user!.teams}
+											switchTeam={switchTeam}
+											currentTeamId={session.teamId!}
+										/>
 									</div>
 									<div className="hidden md:block">
 										<div className="ml-4 flex items-center md:ml-6">

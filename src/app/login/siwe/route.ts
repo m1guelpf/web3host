@@ -1,5 +1,7 @@
+import prisma from '@/db/prisma'
 import { tap } from '@/lib/utils'
 import Session from '@/lib/session'
+import { TeamType } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 import { SiweErrorType, SiweMessage, generateNonce } from 'siwe'
 
@@ -40,6 +42,19 @@ export const POST = async (req: NextRequest) => {
 				return tap(new NextResponse(String(error), { status: 400 }), res => session.clear(res))
 		}
 	}
+
+	const user = await prisma.user.upsert({
+		where: { id: session.userId },
+		create: {
+			id: session.userId,
+			teams: {
+				create: { name: 'Personal Team', type: TeamType.PERSONAL },
+			},
+		},
+		update: {},
+		select: { teams: { select: { id: true } } },
+	})
+	session.teamId = user.teams[0].id
 
 	return tap(new NextResponse(''), res => session.persist(res))
 }

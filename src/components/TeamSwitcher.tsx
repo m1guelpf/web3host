@@ -1,13 +1,14 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { FC, useState } from 'react'
 import Input from '@/components/ui/Input'
 import Label from '@/components/ui/Label'
 import Button from '@/components/ui/Button'
+import { FC, useMemo, useState } from 'react'
+import { Team, TeamType } from '@prisma/client'
 import { CaretUpDown, Check, PlusCircle } from '@phosphor-icons/react'
 import Avatar, { AvatarFallback, AvatarImage } from '@/components/ui/Avatar'
-import Popover, { PopoverContent, PopoverTrigger, PopoverTriggerProps } from '@/components/ui/Popover'
+import Popover, { PopoverContent, PopoverTrigger } from '@/components/ui/Popover'
 import Command, {
 	CommandItem,
 	CommandList,
@@ -50,12 +51,24 @@ const groups = [
 	},
 ]
 
-type Team = (typeof groups)[number]['teams'][number]
-
-const TeamSwitcher: FC<PopoverTriggerProps> = ({ className }) => {
+const TeamSwitcher: FC<{
+	className?: string
+	teams: Team[]
+	currentTeamId: string
+	switchTeam: (team: Team) => Promise<void>
+}> = ({ className, teams, currentTeamId, switchTeam }) => {
 	const [open, setOpen] = useState(false)
 	const [showNewTeamDialog, setShowNewTeamDialog] = useState(false)
-	const [selectedTeam, setSelectedTeam] = useState<Team>(groups[0].teams[0])
+
+	const selectedTeam = useMemo(() => teams.find(team => team.id == currentTeamId), [teams, currentTeamId])
+
+	const [personalTeam, otherTeams] = useMemo(
+		() => [
+			teams.find(team => team.type === TeamType.PERSONAL),
+			teams.filter(team => team.type !== TeamType.PERSONAL),
+		],
+		[teams]
+	)
 
 	return (
 		<Dialog open={showNewTeamDialog} onOpenChange={setShowNewTeamDialog}>
@@ -71,17 +84,17 @@ const TeamSwitcher: FC<PopoverTriggerProps> = ({ className }) => {
 					>
 						<Avatar className="mr-2 h-5 w-5">
 							<AvatarImage
-								src={`https://avatar.vercel.sh/${selectedTeam.value}.png`}
-								alt={selectedTeam.label}
+								src={`https://avatar.vercel.sh/${selectedTeam?.id}.png`}
+								alt={selectedTeam?.name}
 							/>
 							<AvatarFallback>
-								{selectedTeam.label
+								{selectedTeam?.name
 									.split(' ')
 									.map(word => word[0])
 									.join('')}
 							</AvatarFallback>
 						</Avatar>
-						{selectedTeam.label}
+						{selectedTeam?.name}
 						<CaretUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
 					</Button>
 				</PopoverTrigger>
@@ -90,40 +103,71 @@ const TeamSwitcher: FC<PopoverTriggerProps> = ({ className }) => {
 						<CommandList>
 							<CommandInput placeholder="Search team..." />
 							<CommandEmpty>No team found.</CommandEmpty>
-							{groups.map(group => (
-								<CommandGroup key={group.label} heading={group.label}>
-									{group.teams.map(team => (
+							{personalTeam && (
+								<CommandGroup heading="Personal Account">
+									<CommandItem
+										onSelect={() => {
+											switchTeam(personalTeam)
+											setOpen(false)
+										}}
+										className="text-sm"
+									>
+										<Avatar className="mr-2 h-5 w-5">
+											<AvatarImage
+												src={`https://avatar.vercel.sh/${personalTeam.id}.png`}
+												alt={personalTeam.name}
+											/>
+											<AvatarFallback>
+												{personalTeam.name
+													.split(' ')
+													.map(word => word[0])
+													.join('')}
+											</AvatarFallback>
+										</Avatar>
+										{personalTeam.name}
+										<Check
+											className={cn(
+												'ml-auto h-4 w-4',
+												currentTeamId === personalTeam.id ? 'opacity-100' : 'opacity-0'
+											)}
+										/>
+									</CommandItem>
+								</CommandGroup>
+							)}
+							{otherTeams && (
+								<CommandGroup heading="Teams">
+									{otherTeams.map(team => (
 										<CommandItem
-											key={team.value}
+											key={team.id}
 											onSelect={() => {
-												setSelectedTeam(team)
+												switchTeam(team)
 												setOpen(false)
 											}}
 											className="text-sm"
 										>
 											<Avatar className="mr-2 h-5 w-5">
 												<AvatarImage
-													src={`https://avatar.vercel.sh/${team.value}.png`}
-													alt={team.label}
+													src={`https://avatar.vercel.sh/${team.id}.png`}
+													alt={team.name}
 												/>
 												<AvatarFallback>
-													{team.label
+													{team.name
 														.split(' ')
 														.map(word => word[0])
 														.join('')}
 												</AvatarFallback>
 											</Avatar>
-											{team.label}
+											{team.name}
 											<Check
 												className={cn(
 													'ml-auto h-4 w-4',
-													selectedTeam.value === team.value ? 'opacity-100' : 'opacity-0'
+													currentTeamId === team.id ? 'opacity-100' : 'opacity-0'
 												)}
 											/>
 										</CommandItem>
 									))}
 								</CommandGroup>
-							))}
+							)}
 						</CommandList>
 						<CommandSeparator />
 						<CommandList>

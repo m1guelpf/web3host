@@ -1,0 +1,54 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id String @id
+
+    invitedAt    DateTime?
+    registeredAt DateTime  @default(now())
+
+    teams Team[]
+}
+
+enum TeamType {
+    PERSONAL
+    ORGANIZATION
+}
+
+model Team {
+    id        String   @id @default(uuid())
+    name      String
+    type      TeamType @default(ORGANIZATION)
+    avatarUrl String?
+
+    sites   Site[]
+    members User[]
+}
+
+model Site {
+    id        String  @id @default(uuid())
+    teamId    String
+    name      String
+    avatarUrl String?
+
+    ipnsKey String
+
+    team        Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+    deployments Deployment[]
+}
+
+model Deployment {
+    id     String @id @default(uuid())
+    siteId String
+
+    ipfsCid    String
+    deployedAt DateTime @default(now())
+
+    site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+}

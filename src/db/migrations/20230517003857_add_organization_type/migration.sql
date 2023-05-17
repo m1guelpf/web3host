@@ -1,0 +1,5 @@
+-- CreateEnum
+CREATE TYPE "TeamType" AS ENUM ('PERSONAL', 'ORGANIZATION');
+
+-- AlterTable
+ALTER TABLE "Team" ADD COLUMN     "type" "TeamType" NOT NULL DEFAULT 'ORGANIZATION';
