@@ -6,6 +6,7 @@ import Label from '@/components/ui/Label'
 import Button from '@/components/ui/Button'
 import { FC, useMemo, useState } from 'react'
 import { Team, TeamType } from '@prisma/client'
+import { useAccount, useEnsAvatar } from 'wagmi'
 import { CaretUpDown, Check, PlusCircle } from '@phosphor-icons/react'
 import Avatar, { AvatarFallback, AvatarImage } from '@/components/ui/Avatar'
 import Popover, { PopoverContent, PopoverTrigger } from '@/components/ui/Popover'
@@ -57,10 +58,20 @@ const TeamSwitcher: FC<{
 	currentTeamId: string
 	switchTeam: (team: Team) => Promise<void>
 }> = ({ className, teams, currentTeamId, switchTeam }) => {
+	const { address } = useAccount()
+	const { data: userAvatar } = useEnsAvatar({ address })
 	const [open, setOpen] = useState(false)
 	const [showNewTeamDialog, setShowNewTeamDialog] = useState(false)
 
-	const selectedTeam = useMemo(() => teams.find(team => team.id == currentTeamId), [teams, currentTeamId])
+	const selectedTeam = useMemo(() => {
+		const team = teams.find(team => team.id == currentTeamId)!
+
+		if (team.type == TeamType.PERSONAL && !team.avatarUrl && userAvatar) {
+			team.avatarUrl = userAvatar
+		}
+
+		return team
+	}, [teams, currentTeamId, userAvatar])
 
 	const [personalTeam, otherTeams] = useMemo(
 		() => [
@@ -83,10 +94,7 @@ const TeamSwitcher: FC<{
 						className={cn('w-[200px] justify-between', className)}
 					>
 						<Avatar className="mr-2 h-5 w-5">
-							<AvatarImage
-								src={`https://avatar.vercel.sh/${selectedTeam?.id}.png`}
-								alt={selectedTeam?.name}
-							/>
+							<AvatarImage src={selectedTeam?.avatarUrl ?? undefined} alt={selectedTeam?.name} />
 							<AvatarFallback>
 								{selectedTeam?.name
 									.split(' ')
@@ -114,7 +122,7 @@ const TeamSwitcher: FC<{
 									>
 										<Avatar className="mr-2 h-5 w-5">
 											<AvatarImage
-												src={`https://avatar.vercel.sh/${personalTeam.id}.png`}
+												src={personalTeam?.avatarUrl ?? userAvatar ?? undefined}
 												alt={personalTeam.name}
 											/>
 											<AvatarFallback>
@@ -146,10 +154,7 @@ const TeamSwitcher: FC<{
 											className="text-sm"
 										>
 											<Avatar className="mr-2 h-5 w-5">
-												<AvatarImage
-													src={`https://avatar.vercel.sh/${team.id}.png`}
-													alt={team.name}
-												/>
+												<AvatarImage src={team?.avatarUrl ?? undefined} alt={team.name} />
 												<AvatarFallback>
 													{team.name
 														.split(' ')
