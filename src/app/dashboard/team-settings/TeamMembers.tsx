@@ -152,7 +152,11 @@ const TeamMembers: FC<{
 	)
 }
 
-type MemberProps = { role: TeamRole; member: TeamMember; performAction: (data: TeamRole | 'delete') => Promise<void> }
+type MemberProps = {
+	role: TeamRole
+	member: TeamMember
+	performAction: (data: TeamRole | 'delete') => Promise<unknown>
+}
 const Member: FC<MemberProps> = ({ member, role, performAction }) => {
 	const [isOpen, setIsOpen] = useState(false)
 	const { data: ensName } = useEnsName({ address: member.userId as `0x${string}` })
