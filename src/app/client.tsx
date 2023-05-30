@@ -3,15 +3,16 @@
 import { SiweMessage } from 'siwe'
 import { APP_NAME } from '@/lib/consts'
 import { useRouter } from 'next/navigation'
-import { WagmiConfig, createClient } from 'wagmi'
+import { FC, PropsWithChildren } from 'react'
+import { WagmiConfig, createConfig } from 'wagmi'
 import { IconContext } from '@phosphor-icons/react'
-import { FC, PropsWithChildren, useEffect } from 'react'
-import { ConnectKitProvider, SIWEConfig, SIWEProvider, getDefaultClient, useSIWE } from 'connectkit'
+import { ConnectKitProvider, SIWEConfig, SIWEProvider, getDefaultConfig, useSIWE } from 'connectkit'
 
-const client = createClient(
-	getDefaultClient({
+const config = createConfig(
+	getDefaultConfig({
 		appName: APP_NAME,
 		infuraId: process.env.NEXT_PUBLIC_INFURA_ID,
+		walletConnectProjectId: process.env.NEXT_PUBLIC_WC_ID!,
 	})
 )
 
@@ -53,7 +54,7 @@ const siweConfig: SIWEConfig = {
 const ClientLayout: FC<PropsWithChildren<{}>> = ({ children }) => {
 	return (
 		<IconContext.Provider value={{ color: 'currentColor', size: '' }}>
-			<WagmiConfig client={client}>
+			<WagmiConfig config={config}>
 				<SIWEProvider {...siweConfig}>
 					<SIWERedirector />
 					<ConnectKitProvider options={{ hideBalance: true, enforceSupportedChains: false }}>
@@ -67,17 +68,14 @@ const ClientLayout: FC<PropsWithChildren<{}>> = ({ children }) => {
 
 const SIWERedirector: FC = () => {
 	const router = useRouter()
-	const { isSignedIn, isReady } = useSIWE()
 
-	useEffect(() => {
-		if (!isReady) return
-
-		if (isSignedIn) router.push('/dashboard')
-		else router.push('/login')
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [isSignedIn])
+	useSIWE({
+		onSignOut: () => router.push('/login'),
+		onSignIn: () => router.push('/dashboard'),
+	})
 
 	return null
 }
 
 export default ClientLayout
+export { config as wagmiConfig }

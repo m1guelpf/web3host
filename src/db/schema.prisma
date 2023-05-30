@@ -8,10 +8,8 @@ datasource db {
 }
 
 model User {
-    id String @id
-
-    invitedAt    DateTime?
-    registeredAt DateTime  @default(now())
+    id           String   @id
+    registeredAt DateTime @default(now())
 
     teams TeamMember[]
 }
@@ -42,8 +40,8 @@ model TeamMember {
     teamId String
     role   TeamRole @default(MEMBER)
 
-    user User @relation(fields: [userId], references: [id])
-    team Team @relation(fields: [teamId], references: [id])
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
     @@id([userId, teamId])
 }

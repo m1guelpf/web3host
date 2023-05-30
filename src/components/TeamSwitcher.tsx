@@ -6,7 +6,7 @@ import Label from '@/components/ui/Label'
 import Button from '@/components/ui/Button'
 import { FC, useMemo, useState } from 'react'
 import { Team, TeamType } from '@prisma/client'
-import { useAccount, useEnsAvatar } from 'wagmi'
+import { useAccount, useEnsAvatar, useEnsName } from 'wagmi'
 import { CaretUpDown, Check, PlusCircle } from '@phosphor-icons/react'
 import Avatar, { AvatarFallback, AvatarImage } from '@/components/ui/Avatar'
 import Popover, { PopoverContent, PopoverTrigger } from '@/components/ui/Popover'
@@ -60,7 +60,8 @@ const TeamSwitcher: FC<{
 	onCreate: (name: string) => Promise<void>
 }> = ({ className, teams, currentTeamId, onSwitch, onCreate }) => {
 	const { address } = useAccount()
-	const { data: userAvatar } = useEnsAvatar({ address })
+	const { data: ensName } = useEnsName({ address })
+	const { data: userAvatar } = useEnsAvatar({ name: ensName })
 
 	const [open, setOpen] = useState(false)
 	const [name, setName] = useState<string>('')
@@ -101,7 +102,7 @@ const TeamSwitcher: FC<{
 						role="combobox"
 						aria-expanded={open}
 						aria-label="Select a team"
-						className={cn('w-[200px] justify-between', className)}
+						className={cn('w-[200px] justify-between text-neutral-200', className)}
 					>
 						<Avatar className="mr-2 h-5 w-5">
 							<AvatarImage src={selectedTeam?.avatarUrl ?? undefined} alt={selectedTeam?.name} />
@@ -116,7 +117,7 @@ const TeamSwitcher: FC<{
 						<CaretUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
 					</Button>
 				</PopoverTrigger>
-				<PopoverContent className="w-[200px] p-0">
+				<PopoverContent className="w-[200px] p-0 dark">
 					<Command>
 						<CommandList>
 							<CommandInput placeholder="Search team..." />

@@ -19,3 +19,4 @@ const Label = forwardRef<ElementRef<Root>, LabelProps>(({ className, ...props },
 Label.displayName = Root.displayName
 
 export default Label
+export type { Root, LabelProps }

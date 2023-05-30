@@ -1,10 +1,8 @@
 'use client'
 
-import clsx from 'clsx'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
-import colors from 'tailwindcss/colors'
 import { FC, PropsWithChildren } from 'react'
 import { usePathname } from 'next/navigation'
 

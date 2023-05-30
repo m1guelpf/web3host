@@ -1,3 +1,4 @@
+import { tap } from './lib/utils'
 import Session from './lib/session'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
@@ -9,6 +10,10 @@ export const middleware = async (request: NextRequest) => {
 	if (!session.userId) {
 		if (path.startsWith('/login')) return
 		return NextResponse.redirect(new URL('/login', request.url))
+	}
+
+	if (!session.teamId) {
+		return tap(NextResponse.redirect(new URL('/login', request.url)), res => session.clear(res))
 	}
 
 	if (path == '/' || path.startsWith('/login')) {

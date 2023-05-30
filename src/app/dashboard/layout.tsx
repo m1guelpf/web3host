@@ -6,15 +6,16 @@ import Navigation from './Navigation'
 import { Team } from '@prisma/client'
 import { cookies } from 'next/headers'
 import { PropsWithChildren } from 'react'
+import { revalidatePath } from 'next/cache'
 import TeamSwitcher from '@/components/TeamSwitcher'
 import { Bell, X, List, AirTrafficControl } from '@/components/ui/icons'
 import ConnectWallet, { MobileProfileNav } from '@/components/ConnectWallet'
 import Collapsible, { CollapsibleContent, CollapsibleTrigger } from '@/components/ui/Collapsible'
 
 const navigation = [
-	{ name: 'Overview', href: '/dashboard', current: true },
-	{ name: 'Activity', href: '/team', current: false },
-	{ name: 'Settings', href: '/settings', current: false },
+	{ name: 'Overview', href: '/dashboard' },
+	{ name: 'Activity', href: '/dashboard/activity' },
+	{ name: 'Settings', href: '/dashboard/team-settings' },
 ]
 
 const DashboardLayout = async ({ children }: PropsWithChildren<{}>) => {
@@ -32,7 +33,7 @@ const DashboardLayout = async ({ children }: PropsWithChildren<{}>) => {
 		const session = await Session.fromCookies(cookies())
 		session.teamId = team.id
 
-		// @ts-expect-error -- Next.js returns the wrong type for cookies on server actions
+		revalidatePath('/dashboard/team-settings')
 		await session.persist(cookies())
 	}
 
@@ -48,13 +49,13 @@ const DashboardLayout = async ({ children }: PropsWithChildren<{}>) => {
 		})
 		session.teamId = team.id
 
-		// @ts-expect-error -- Next.js returns the wrong type for cookies on server actions
+		revalidatePath('/dashboard/team-settings')
 		await session.persist(cookies())
 	}
 
 	return (
 		<div className="min-h-screen bg-neutral-100">
-			<div className="bg-neutral-800 pb-32">
+			<div className="bg-neutral-800 pb-32 dark">
 				<Collapsible asChild>
 					<nav className="bg-neutral-800 group">
 						<div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
@@ -113,37 +114,13 @@ const DashboardLayout = async ({ children }: PropsWithChildren<{}>) => {
 							</div>
 						</div>
 						<CollapsibleContent className="border-b border-neutral-700 md:hidden">
-							<div className="space-y-1 px-2 py-3 sm:px-3">
-								{navigation.map(item => (
-									<CollapsibleTrigger key={item.name} asChild>
-										<Link
-											href={item.href}
-											aria-current={item.current ? 'page' : undefined}
-											className={cn(
-												item.current
-													? 'bg-neutral-900 text-white'
-													: 'text-neutral-300 hover:bg-neutral-700 hover:text-white',
-												'block rounded-md px-3 py-2 text-base font-medium'
-											)}
-										>
-											{item.name}
-										</Link>
-									</CollapsibleTrigger>
-								))}
-							</div>
-							<MobileProfileNav />
+							<MobileProfileNav navigation={navigation} />
 						</CollapsibleContent>
 					</nav>
 				</Collapsible>
-
-				<header className="py-10">
-					<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-						<h1 className="text-3xl font-bold tracking-tight text-white">Dashboard</h1>
-					</div>
-				</header>
 			</div>
 
-			<main className="-mt-32">
+			<main className="-mt-24">
 				<div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
 					<div className="rounded-lg bg-white px-5 py-6 shadow sm:px-6">{children}</div>
 				</div>
