@@ -52,11 +52,15 @@ const siweConfig: SIWEConfig = {
 }
 
 const ClientLayout: FC<PropsWithChildren<{}>> = ({ children }) => {
+	const router = useRouter()
 	return (
 		<IconContext.Provider value={{ color: 'currentColor', size: '' }}>
 			<WagmiConfig config={config}>
-				<SIWEProvider {...siweConfig}>
-					<SIWERedirector />
+				<SIWEProvider
+					onSignIn={() => router.push('/dashboard')}
+					onSignOut={() => router.push('/login')}
+					{...siweConfig}
+				>
 					<ConnectKitProvider options={{ hideBalance: true, enforceSupportedChains: false }}>
 						{children}
 					</ConnectKitProvider>
@@ -64,17 +68,6 @@ const ClientLayout: FC<PropsWithChildren<{}>> = ({ children }) => {
 			</WagmiConfig>
 		</IconContext.Provider>
 	)
-}
-
-const SIWERedirector: FC = () => {
-	const router = useRouter()
-
-	useSIWE({
-		onSignOut: () => router.push('/login'),
-		onSignIn: () => router.push('/dashboard'),
-	})
-
-	return null
 }
 
 export default ClientLayout
