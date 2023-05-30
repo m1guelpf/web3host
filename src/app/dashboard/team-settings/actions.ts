@@ -4,8 +4,8 @@ import { isAddress } from 'viem'
 import prisma from '@/db/prisma'
 import Session from '@/lib/session'
 import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { error, isError } from '@/lib/errors'
 import { getAddressFromENS } from '@/lib/utils'
 import { TeamRole, TeamType } from '@prisma/client'
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime'
@@ -17,7 +17,7 @@ const ensurePermissions = async (session: Session) => {
 	})
 
 	if (member.role != TeamRole.OWNER && member.role != TeamRole.ADMIN) {
-		throw new Error("You don't have permission to perform this action.")
+		return error("You don't have permission to perform this action.")
 	}
 
 	return member.role
@@ -28,7 +28,7 @@ export const inviteUser = async ({ address }: { address: string }) => {
 	await ensurePermissions(session)
 
 	const resolvedAddress = (await getAddressFromENS(address)) ?? address
-	if (!isAddress(resolvedAddress)) throw new Error('Invalid address.')
+	if (!isAddress(resolvedAddress)) return error('Invalid address.')
 
 	try {
 		await prisma.teamMember.create({
@@ -37,9 +37,9 @@ export const inviteUser = async ({ address }: { address: string }) => {
 				user: { connectOrCreate: { where: { id: resolvedAddress }, create: { id: resolvedAddress } } },
 			},
 		})
-	} catch (error) {
-		if ((error as PrismaClientKnownRequestError)?.code != 'P2002') throw error
-		throw new Error('User is already a member of this team.')
+	} catch (e) {
+		if ((e as PrismaClientKnownRequestError)?.code != 'P2002') throw error
+		return error('User is already a member of this team.')
 	}
 
 	revalidatePath('/dashboard/team-settings')
@@ -60,6 +60,7 @@ export const updateTeamData = async ({ name, avatarUrl }: { name: string; avatar
 export const updateMember = async (userId: string, action: TeamRole | 'delete') => {
 	const session = await Session.fromCookies(cookies())
 	const userRole = await ensurePermissions(session)
+	if (isError(userRole)) return userRole
 
 	const [team, member] = await Promise.all([
 		await prisma.team.findUniqueOrThrow({ where: { id: session.teamId! } }),
@@ -68,8 +69,10 @@ export const updateMember = async (userId: string, action: TeamRole | 'delete') 
 		}),
 	])
 
-	if (member.role == TeamRole.OWNER) throw new Error("You can't modify the owner.")
-	if (member.role == TeamRole.ADMIN && userRole != TeamRole.OWNER) throw new Error("You can't modify admins.")
+	if (member.role == TeamRole.OWNER) return error("You can't modify the owner.")
+	if (member.role == TeamRole.ADMIN && userRole != TeamRole.OWNER) {
+		if (member.userId != session.userId || action == TeamRole.OWNER) return error("You can't modify admins.")
+	}
 
 	if (action == 'delete') {
 		await prisma.teamMember.delete({
@@ -81,7 +84,7 @@ export const updateMember = async (userId: string, action: TeamRole | 'delete') 
 
 	// Unset previous owner
 	if (action == TeamRole.OWNER) {
-		if (team.type == TeamType.PERSONAL) throw new Error("You can't transfer ownership of a personal team.")
+		if (team.type == TeamType.PERSONAL) return error("You can't transfer ownership of a personal team.")
 
 		await prisma.teamMember.updateMany({
 			data: { role: TeamRole.ADMIN },
@@ -101,10 +104,10 @@ export const deleteTeam = async () => {
 	const session = await Session.fromCookies(cookies())
 	const role = await ensurePermissions(session)
 
-	const team = await prisma.team.findUnique({ where: { id: session.teamId! } })
+	const team = await prisma.team.findUniqueOrThrow({ where: { id: session.teamId! } })
 
-	if (team?.type == TeamType.PERSONAL) throw new Error("You can't delete a personal team.")
-	if (role != TeamRole.OWNER) throw new Error("You don't have permission to perform this action.")
+	if (team.type == TeamType.PERSONAL) return error("You can't delete a personal team.")
+	if (role != TeamRole.OWNER) return error("You don't have permission to perform this action.")
 
 	await prisma.team.delete({ where: { id: session.teamId! } })
 

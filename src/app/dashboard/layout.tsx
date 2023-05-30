@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import prisma from '@/db/prisma'
 import Session from '@/lib/session'
+import { error } from '@/lib/errors'
 import Navigation from './Navigation'
 import { Team } from '@prisma/client'
 import { cookies } from 'next/headers'
@@ -27,10 +28,16 @@ const DashboardLayout = async ({ children }: PropsWithChildren<{}>) => {
 
 	if (!user) throw new Error('User not found')
 
-	const switchTeam = async (team: Team) => {
+	const switchTeam = async (teamId: string) => {
 		'use server'
 
 		const session = await Session.fromCookies(cookies())
+		const team = await prisma.team.findUniqueOrThrow({
+			where: { id: teamId },
+			include: { members: { where: { userId: session.userId } } },
+		})
+
+		if (!team.members.length) return error('You are not a member of this team')
 		session.teamId = team.id
 
 		revalidatePath('/dashboard/team-settings')

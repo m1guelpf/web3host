@@ -3,6 +3,7 @@
 import { cn } from '@/lib/utils'
 import Input from '@/components/ui/Input'
 import Label from '@/components/ui/Label'
+import { actionToast } from '@/lib/errors'
 import Button from '@/components/ui/Button'
 import { FC, useMemo, useState } from 'react'
 import { Team, TeamType } from '@prisma/client'
@@ -56,8 +57,8 @@ const TeamSwitcher: FC<{
 	className?: string
 	teams: Team[]
 	currentTeamId: string
-	onSwitch: (team: Team) => Promise<void>
 	onCreate: (name: string) => Promise<void>
+	onSwitch: (teamId: string) => Promise<void>
 }> = ({ className, teams, currentTeamId, onSwitch, onCreate }) => {
 	const { address } = useAccount()
 	const { data: ensName } = useEnsName({ address })
@@ -126,15 +127,19 @@ const TeamSwitcher: FC<{
 								<CommandGroup heading="Personal Account">
 									<CommandItem
 										onSelect={() => {
-											onSwitch(personalTeam)
+											actionToast(onSwitch(personalTeam.id), {
+												loading: 'Switching team...',
+												error: 'Could not switch team.',
+												success: 'Switched to personal team.',
+											})
 											setOpen(false)
 										}}
 										className="text-sm"
 									>
 										<Avatar className="mr-2 h-5 w-5">
 											<AvatarImage
-												src={personalTeam?.avatarUrl ?? userAvatar ?? undefined}
 												alt={personalTeam.name}
+												src={personalTeam?.avatarUrl ?? userAvatar ?? undefined}
 											/>
 											<AvatarFallback>
 												{personalTeam.name
@@ -159,7 +164,11 @@ const TeamSwitcher: FC<{
 										<CommandItem
 											key={team.id}
 											onSelect={() => {
-												onSwitch(team)
+												actionToast(onSwitch(team.id), {
+													loading: 'Switching team...',
+													success: 'Switched to team.',
+													error: 'Could not switch team.',
+												})
 												setOpen(false)
 											}}
 											className="text-sm"

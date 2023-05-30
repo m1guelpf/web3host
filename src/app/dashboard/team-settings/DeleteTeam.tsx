@@ -2,6 +2,7 @@
 
 import { deleteTeam } from './actions'
 import { toast } from 'react-hot-toast'
+import { actionToast } from '@/lib/errors'
 import Button from '@/components/ui/Button'
 import { FC, FormEvent, useState } from 'react'
 import { Team, TeamRole } from '@prisma/client'
@@ -21,7 +22,7 @@ const DeleteTeam: FC<{ team: Team; role: TeamRole }> = ({ team, role }) => {
 	const handleDelete = async (event: FormEvent) => {
 		event.preventDefault()
 
-		await toast.promise(deleteTeam(), {
+		await actionToast(deleteTeam(), {
 			error: e => e.message,
 			success: 'Team deleted',
 			loading: 'Deleting team...',

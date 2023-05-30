@@ -7,6 +7,7 @@ import { toast } from 'react-hot-toast'
 import Input from '@/components/ui/Input'
 import { truncateAddr } from '@/lib/utils'
 import { wagmiConfig } from '@/app/client'
+import { actionToast } from '@/lib/errors'
 import Button from '@/components/ui/Button'
 import { FC, useEffect, useState } from 'react'
 import { inviteUser, updateMember } from './actions'
@@ -159,7 +160,7 @@ const Member: FC<MemberProps> = ({ member, role, performAction }) => {
 	const onUpdate = async (action: TeamRole | 'delete') => {
 		setIsOpen(false)
 
-		toast.promise(performAction(action), {
+		actionToast(performAction(action), {
 			error: e => e.message,
 			success: `${action == 'delete' ? 'Deleted' : 'Updated'} member!`,
 			loading: `${action == 'delete' ? 'Delete' : 'Update'} member...`,
@@ -208,7 +209,7 @@ const Member: FC<MemberProps> = ({ member, role, performAction }) => {
 								<CommandItem
 									disabled={role != TeamRole.OWNER}
 									onSelect={() => onUpdate(TeamRole.ADMIN)}
-									className="teamaspace-y-1 flex flex-col items-start px-4 py-2"
+									className="teamaspace-y-1 flex flex-col items-start px-4 py-2 aria-disabled:opacity-40 aria-disabled:cursor-not-allowed"
 								>
 									<p>Admin</p>
 									<p className="text-sm text-muted-foreground">
@@ -218,7 +219,7 @@ const Member: FC<MemberProps> = ({ member, role, performAction }) => {
 								<CommandItem
 									disabled={role != TeamRole.OWNER}
 									onSelect={() => onUpdate(TeamRole.OWNER)}
-									className="teamaspace-y-1 flex flex-col items-start px-4 py-2"
+									className="teamaspace-y-1 flex flex-col items-start px-4 py-2 aria-disabled:opacity-40 aria-disabled:cursor-not-allowed"
 								>
 									<p>Owner</p>
 									<p className="text-sm text-muted-foreground">
@@ -227,9 +228,9 @@ const Member: FC<MemberProps> = ({ member, role, performAction }) => {
 								</CommandItem>
 								{member.role != TeamRole.OWNER && (
 									<CommandItem
-										onSelect={() => onUpdate('delete')}
-										className="teamaspace-y-1 flex flex-col items-start px-4 py-2 aria-selected:bg-red-100 aria-selected:text-red-500"
 										disabled={role == TeamRole.MEMBER}
+										onSelect={() => onUpdate('delete')}
+										className="teamaspace-y-1 flex flex-col items-start px-4 py-2 aria-selected:bg-red-100 aria-selected:text-red-500 aria-disabled:opacity-40 aria-disabled:cursor-not-allowed"
 									>
 										<p>Remove</p>
 										<p className="text-sm text-muted-foreground group-aria-selected:text-red-400">

@@ -7,6 +7,7 @@ import { APP_NAME } from '@/lib/consts'
 import { toast } from 'react-hot-toast'
 import Input from '@/components/ui/Input'
 import { updateTeamData } from './actions'
+import { actionToast } from '@/lib/errors'
 import Button from '@/components/ui/Button'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Card, { CardContent, CardFooter, CardHeader } from '@/components/ui/Card'
@@ -35,7 +36,7 @@ const EditTeamDetails: FC<{ team: Team }> = ({ team }) => {
 		<Form
 			{...form}
 			onSubmit={data =>
-				toast.promise(updateTeamData(data), {
+				actionToast(updateTeamData(data), {
 					error: e => e.message,
 					success: 'Updated team!',
 					loading: 'Updating team...',
