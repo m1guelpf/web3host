@@ -1,22 +1,19 @@
 import Link from 'next/link'
-import { cn } from '@/lib/utils'
 import prisma from '@/db/prisma'
 import Session from '@/lib/session'
 import { error } from '@/lib/errors'
 import Navigation from './Navigation'
-import { Team } from '@prisma/client'
 import { cookies } from 'next/headers'
 import { PropsWithChildren } from 'react'
 import { revalidatePath } from 'next/cache'
 import TeamSwitcher from '@/components/TeamSwitcher'
-import { Bell, X, List, AirTrafficControl } from '@/components/ui/icons'
+import { Bell, X, List, Cube } from '@/components/ui/icons'
 import ConnectWallet, { MobileProfileNav } from '@/components/ConnectWallet'
 import Collapsible, { CollapsibleContent, CollapsibleTrigger } from '@/components/ui/Collapsible'
 
 const navigation = [
 	{ name: 'Overview', href: '/dashboard' },
-	{ name: 'Activity', href: '/dashboard/activity' },
-	{ name: 'Settings', href: '/dashboard/team-settings' },
+	{ name: 'Team Settings', href: '/dashboard/team-settings' },
 ]
 
 const DashboardLayout = async ({ children }: PropsWithChildren<{}>) => {
@@ -70,7 +67,7 @@ const DashboardLayout = async ({ children }: PropsWithChildren<{}>) => {
 								<div className="flex h-16 items-center justify-between px-4 sm:px-0">
 									<div className="flex items-center">
 										<Link href="/dashboard" className="flex-shrink-0">
-											<AirTrafficControl className="h-8 w-8" color="white" weight="duotone" />
+											<Cube className="h-8 w-8" color="white" weight="duotone" />
 										</Link>
 										<TeamSwitcher
 											className="ml-4"

@@ -57,8 +57,8 @@ const TeamSwitcher: FC<{
 	className?: string
 	teams: Team[]
 	currentTeamId: string
-	onCreate: (name: string) => Promise<void>
-	onSwitch: (teamId: string) => Promise<void>
+	onCreate: (name: string) => Promise<unknown>
+	onSwitch: (teamId: string) => Promise<unknown>
 }> = ({ className, teams, currentTeamId, onSwitch, onCreate }) => {
 	const { address } = useAccount()
 	const { data: ensName } = useEnsName({ address })

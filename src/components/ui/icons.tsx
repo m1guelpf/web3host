@@ -1,3 +1,3 @@
 'use client'
 
-export { List, Bell, X, AirTrafficControl } from '@phosphor-icons/react'
+export { List, Bell, X, Cube } from '@phosphor-icons/react'
